@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>시 짓기 보드 · 머리글자 시 / 학기 시집</title>
+    <meta
+      name="description"
+      content="머리글자(아크로스틱) 단어로 한 줄씩 시를 쓰고, 학기말 우리반 시집(PDF)으로 묶어내는 초등 국어 수업 도구."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+    <header class="topbar" role="banner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              fill="currentColor"
+              d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 22 L10.5 12.5 L3 11 L10.5 9.5 Z"
+            />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">시 짓기 보드</h1>
+          <p class="brand-subtitle">머리글자 시 · 우리반 시집</p>
+        </div>
+
+        <button
+          id="class-chip"
+          type="button"
+          class="class-chip"
+          aria-label="학급 바꾸기"
+          aria-haspopup="dialog"
+          hidden
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+            />
+          </svg>
+          <span id="class-chip-name">학급</span>
+          <span id="class-chip-count" class="class-chip-count">0편</span>
+          <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+            <path fill="currentColor" d="M7 10l5 5 5-5z" />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="topbar-actions" aria-label="주 기능">
+        <button
+          id="sync-toggle"
+          type="button"
+          class="btn btn-ghost"
+          aria-pressed="false"
+          title="폴더 동기화"
+        >
+          <span class="dot" aria-hidden="true"></span>
+          <span>폴더 동기화</span>
+        </button>
+
+        <div class="menu-wrap">
+          <button
+            id="export-btn"
+            type="button"
+            class="btn btn-ghost"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="export-menu"
+          >
+            내보내기
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path fill="currentColor" d="M7 10l5 5 5-5z" />
+            </svg>
+          </button>
+          <ul
+            id="export-menu"
+            class="menu"
+            role="menu"
+            aria-labelledby="export-btn"
+            hidden
+          >
+            <li role="none">
+              <button role="menuitem" type="button" data-action="pdf">
+                학기 시집 PDF 만들기
+              </button>
+            </li>
+            <li role="none">
+              <button role="menuitem" type="button" data-action="export-json">
+                JSON으로 내보내기
+              </button>
+            </li>
+            <li role="none">
+              <button role="menuitem" type="button" data-action="import-json">
+                JSON 가져오기
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <button id="present-btn" type="button" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path fill="currentColor" d="M8 5v14l11-7z" />
+          </svg>
+          발표 모드
+        </button>
+      </nav>
+    </header>
+
+    <main id="main" class="layout">
+      <section class="panel panel-input" aria-labelledby="input-h">
+        <header class="panel-header">
+          <h2 id="input-h" class="panel-title">새 작품 쓰기</h2>
+          <p class="panel-help">
+            머리글자 단어를 적고 <kbd>시작</kbd>을 누르면 줄이 자동으로 펼쳐져요.
+          </p>
+        </header>
+
+        <form id="poem-form" novalidate>
+          <label class="field" for="acrostic">
+            <span class="field-label">머리글자 단어</span>
+            <input
+              id="acrostic"
+              name="acrostic"
+              type="text"
+              maxlength="20"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="예: 사랑해"
+              required
+            />
+            <small class="field-help"
+              >공백은 자동으로 무시돼요. 한글·영어·숫자 모두 가능합니다.</small
+            >
+          </label>
+
+          <div class="row">
+            <button id="start-btn" type="button" class="btn btn-secondary">
+              시작
+            </button>
+            <button id="clear-btn" type="button" class="btn btn-text">
+              지우기
+            </button>
+          </div>
+
+          <div id="lines" class="lines" aria-live="polite"></div>
+
+          <label class="field" for="author">
+            <span class="field-label">작가 (선택)</span>
+            <input
+              id="author"
+              name="author"
+              type="text"
+              maxlength="20"
+              autocomplete="off"
+              placeholder="이름 또는 별명"
+            />
+          </label>
+
+          <div class="row row-actions">
+            <button id="save-btn" type="submit" class="btn btn-primary" disabled>
+              갤러리에 저장
+            </button>
+            <span id="save-hint" class="hint">
+              <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 로도 저장돼요
+            </span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel panel-gallery" aria-labelledby="gallery-h">
+        <header class="panel-header gallery-header">
+          <h2 id="gallery-h" class="panel-title">
+            우리반 시집 <span id="poem-count" class="count">0편</span>
+          </h2>
+          <p class="panel-help" id="gallery-help">
+            저장한 작품이 카드로 쌓여요.
+          </p>
+        </header>
+
+        <div
+          id="gallery"
+          class="gallery"
+          role="list"
+          aria-label="저장된 시 작품"
+        ></div>
+
+        <div id="gallery-empty" class="empty-state" hidden>
+          <svg
+            viewBox="0 0 64 64"
+            width="56"
+            height="56"
+            aria-hidden="true"
+            class="empty-illustration"
+          >
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              opacity="0.4"
+            />
+            <path
+              d="M20 28 Q32 18 44 28 M22 36 H42 M22 44 H36"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <p class="empty-title">아직 작품이 없어요</p>
+          <p class="empty-help">
+            왼쪽 보드에서 첫 시를 적어보세요. 머리글자만 있으면 시작됩니다.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        모든 작품은 이 기기 안에만 저장됩니다 (localStorage). 외부 서버 업로드
+        없음.
+      </p>
+      <p class="kbd-help">
+        <kbd>R</kbd> 발표 모드 · <kbd>Esc</kbd> 닫기 · <kbd>←</kbd> <kbd>→</kbd>
+        작품 이동
+      </p>
+    </footer>
+
+    <!-- ===== 발표 모드 ===== -->
+    <div
+      id="present"
+      class="present"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="present-title"
+      hidden
+    >
+      <button
+        id="present-close"
+        type="button"
+        class="present-close"
+        aria-label="발표 모드 닫기"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"
+          />
+        </svg>
+      </button>
+      <h2 id="present-title" class="visually-hidden">발표 모드</h2>
+
+      <button
+        id="present-prev"
+        type="button"
+        class="present-nav present-nav-prev"
+        aria-label="이전 작품"
+      >
+        <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+          <path fill="currentColor" d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z" />
+        </svg>
+      </button>
+
+      <article id="present-card" class="present-card">
+        <!-- filled by JS -->
+      </article>
+
+      <button
+        id="present-next"
+        type="button"
+        class="present-nav present-nav-next"
+        aria-label="다음 작품"
+      >
+        <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+          <path fill="currentColor" d="M10 6 8.6 7.4 13.2 12l-4.6 4.6L10 18l6-6z" />
+        </svg>
+      </button>
+
+      <footer class="present-footer">
+        <span id="present-index">1 / 1</span>
+        <button id="present-shuffle" type="button" class="btn btn-ghost-on-dark">
+          🎲 무작위로
+        </button>
+      </footer>
+    </div>
+
+    <!-- ===== PDF 옵션 모달 ===== -->
+    <div
+      id="pdf-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pdf-title"
+      hidden
+    >
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2 id="pdf-title">학기 시집 PDF 만들기</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </header>
+        <form id="pdf-form" class="modal-body">
+          <label class="field" for="pdf-class">
+            <span class="field-label">학급명</span>
+            <input
+              id="pdf-class"
+              type="text"
+              placeholder="예: 5학년 3반"
+              maxlength="40"
+            />
+          </label>
+          <label class="field" for="pdf-title-input">
+            <span class="field-label">시집 제목</span>
+            <input
+              id="pdf-title-input"
+              type="text"
+              placeholder="예: 우리들의 봄"
+              maxlength="40"
+              required
+            />
+          </label>
+          <label class="field" for="pdf-foreword">
+            <span class="field-label">발문 (선택)</span>
+            <textarea
+              id="pdf-foreword"
+              rows="3"
+              maxlength="240"
+              placeholder="한 학기 동안 우리가 쓴 시를 모았습니다…"
+            ></textarea>
+          </label>
+          <div class="row row-actions">
+            <button type="button" class="btn btn-text" data-close-modal>
+              취소
+            </button>
+            <button id="pdf-create" type="submit" class="btn btn-primary">
+              PDF 만들기
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== 학급 관리 모달 ===== -->
+    <div
+      id="classes-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="classes-title"
+      hidden
+    >
+      <div class="modal-card classes-card">
+        <header class="modal-header">
+          <h2 id="classes-title">학급 관리</h2>
+          <button
+            type="button"
+            class="modal-close"
+            data-close-modal
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </header>
+        <div class="modal-body">
+          <ul id="class-list" class="class-list"></ul>
+          <form id="new-class-form" class="new-class">
+            <label class="field" for="new-class-input">
+              <span class="field-label">새 학급 만들기</span>
+              <div class="new-class-row">
+                <input
+                  id="new-class-input"
+                  type="text"
+                  placeholder="예: 5-3"
+                  maxlength="30"
+                  autocomplete="off"
+                  required
+                />
+                <button type="submit" class="btn btn-primary">추가</button>
+              </div>
+            </label>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 환영 모달 (학급 0개) ===== -->
+    <div
+      id="welcome-modal"
+      class="modal welcome-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcome-title"
+      hidden
+    >
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2 id="welcome-title">환영합니다, 선생님</h2>
+        </header>
+        <form id="welcome-form" class="modal-body">
+          <p class="welcome-help">
+            먼저 우리반을 알려주세요. 학급마다 시집이 따로 모입니다.
+            <br />
+            여러 학급을 가르치신다면 나중에 학급을 더 추가하실 수 있어요.
+          </p>
+          <label class="field" for="welcome-class-input">
+            <span class="field-label">학급 이름</span>
+            <input
+              id="welcome-class-input"
+              type="text"
+              placeholder="예: 5-3"
+              maxlength="30"
+              autocomplete="off"
+              required
+            />
+          </label>
+          <div class="row row-actions">
+            <button type="submit" class="btn btn-primary">시작하기</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== 토스트 ===== -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- 숨겨진 파일 input (JSON 가져오기) -->
+    <input
+      id="import-file"
+      type="file"
+      accept="application/json,.json"
+      class="visually-hidden"
+    />
+
+    <!-- 외부 라이브러리 (PDF, PNG) — defer 로딩, 오프라인 영향 없도록 사용시점에 폴백 -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"
+    ></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
